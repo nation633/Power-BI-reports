@@ -89,23 +89,7 @@ EnsureRelationship(activitiesTable, "Date_key", dateTable, "DATE_KEY");
 EnsureRelationship(activitiesTable, "CaseNumber", casesTable, "CaseNumber");
 
 
-// 6. Create Integration Measures
-if (!casesTable.Measures.Any(m => m.Name == "Banker Support Cases"))
-{
-    var m = casesTable.AddMeasure("Banker Support Cases");
-    m.Expression = "CALCULATE(COUNTROWS('" + casesTable.Name + "'), '" + casesTable.Name + "'[CaseType] = \"Service Request\")";
-    m.FormatString = "#,0";
-    m.Description = "Count of cases where CaseType is 'Service Request'.";
-}
-
-if (!activitiesTable.Measures.Any(m => m.Name == "Banker Support Activities"))
-{
-    var m = activitiesTable.AddMeasure("Banker Support Activities");
-    m.Expression = "COUNTROWS('" + activitiesTable.Name + "')";
-    m.FormatString = "#,0";
-}
-
-// 7. Add Objects to Perspective
+// 6. Add Objects to Perspective
 var tablesToInclude = new[] { casesTable, activitiesTable, employeeTable, dateTable };
 
 foreach (var table in tablesToInclude)

@@ -15,15 +15,7 @@ The solution creates a dedicated Perspective and implements a **Star Schema** de
     *   `DIM_EMPLOYEE` (Dimension)
     *   `DIM_DATE` (Dimension)
 
-### 2. Data Integration (Measures)
-To integrate the specific filtering logic of the requested report (e.g., "Service Requests") without deleting data from the underlying tables (preserving them for other reports), we created specific DAX measures.
-
-*   **[Banker Support Cases]**: `CALCULATE(COUNTROWS('Cases_History_tbl'), 'Cases_History_tbl'[CaseType] = "Service Request")`
-    *   *Purpose:* Replicates the SQL filter logic dynamically. It counts only the relevant service request cases.
-*   **[Banker Support Activities]**: `COUNTROWS('CRM_Activities')`
-    *   *Purpose:* Counts all CRM activities.
-
-### 3. Relationship Strategy (The "Combined View")
+### 2. Relationship Strategy (The "Combined View")
 To allow you to see Cases and Activities side-by-side (e.g., "Show me Cases and Activities for Region X"), we established active relationships to shared dimensions. This provides the functionality of a "Join" but is much faster and cleaner.
 
 *   **Employee Context (Joined by Staff Number):**
@@ -44,5 +36,5 @@ To allow you to see Cases and Activities side-by-side (e.g., "Show me Cases and 
 When you connect to this Perspective in Power BI:
 1.  Select **Region** or **Area** from **DIM_EMPLOYEE**.
 2.  Select **Portfolio** from **Cases_History_tbl**.
-3.  Select the **Measures** `[Banker Support Cases]` and `[Banker Support Activities]`.
+3.  Select measures or counts from the Fact tables.
 4.  The report will automatically display the combined counts, sliced by both Employee location and Case portfolio, maintaining the exact behavior of your SQL query joins.

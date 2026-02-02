@@ -1,43 +1,43 @@
 # Data Modelling Documentation: Relationship Centre Banker Support Tracker
 
 ## Overview
-This document details the changes applied to the SSAS Tabular Model to support the **Relationship Centre Banker Support Tracker** report. The primary goal was to create a dedicated Perspective for this report and ensure the underlying data relationships were established to support the analysis of "Branch Caller" support requests without bloating the model size.
+This document details the configuration applied to the SSAS Tabular Model to support the **Relationship Centre Banker Support Tracker**.
 
-## Actions Taken
+The solution creates a dedicated Perspective and implements a **Star Schema** design. This effectively **joins** the two fact tables (`Cases` and `Activities`) by linking them to common dimensions (`Employee` and `Date`), creating a **combined view** without physically duplicating data. This approach ensures the model remains **lightweight, efficient, and fast**.
 
-### 1. Perspective Creation
+## Changes Implemented
+
+### 1. Perspective
 *   **Name:** `Relationship Centre Banker Support Tracker`
-*   **Purpose:** To provide a focused subset of the model specifically for this report, reducing clutter for report authors and end-users.
-*   **Logic:** The script checks if a perspective with this name exists. If not, it creates it.
+*   **Content:** Contains only the relevant tables to replicate the original report's scope:
+    *   `Cases_History_tbl` (Fact)
+    *   `CRM_Activities` (Fact)
+    *   `DIM_EMPLOYEE` (Dimension)
+    *   `DIM_DATE` (Dimension)
 
-### 2. Relationship Management (Star Schema Implementation)
-To maintain model efficiency and avoid importing redundant text columns (like Region, Area, Title) into the Fact tables, we utilized a Star Schema approach by linking Fact tables directly to the `DIM_EMPLOYEE` dimension.
+### 2. Data Integration (Measures)
+To integrate the specific filtering logic of the requested report (e.g., "Service Requests") without deleting data from the underlying tables (preserving them for other reports), we created specific DAX measures.
 
-*   **Relationship 1: Cases to Employee**
-    *   **From Table:** `Cases_History_tbl`
-    *   **From Column:** `BranchCallerEmployeeNumber` (Matches `NB` + Staff Number format)
-    *   **To Table:** `DIM_EMPLOYEE`
-    *   **To Column:** `EMPLOYEE_ID`
-    *   **Behavior:** Active, One-Directional (Dimension filters Fact).
+*   **[Banker Support Cases]**: `CALCULATE(COUNTROWS('Cases_History_tbl'), 'Cases_History_tbl'[CaseType] = "Service Request")`
+    *   *Purpose:* Replicates the SQL filter logic dynamically. It counts only the relevant service request cases.
+*   **[Banker Support Activities]**: `COUNTROWS('CRM_Activities')`
+    *   *Purpose:* Counts all CRM activities.
 
-*   **Relationship 2: Activities to Employee**
-    *   **From Table:** `CRM_Activities`
-    *   **From Column:** `BranchEmployeeNumber` (Matches `NB` + Staff Number format)
-    *   **To Table:** `DIM_EMPLOYEE`
-    *   **To Column:** `EMPLOYEE_ID`
-    *   **Behavior:** Active, One-Directional (Dimension filters Fact).
+### 3. Relationship Strategy (The "Combined View")
+To allow you to see Cases and Activities side-by-side (e.g., "Show me Cases and Activities for Region X"), we established active relationships to shared dimensions. This provides the functionality of a "Join" but is much faster and cleaner.
 
-**Note:** The script was designed to *check* for these relationships first. It only creates them if they do not already exist, preventing duplication or errors.
+*   **Employee Context (Joined by Staff Number):**
+    *   `Cases_History_tbl[BranchCallerEmployeeNumber]` $\rightarrow$ `DIM_EMPLOYEE[EMPLOYEE_ID]`
+    *   `CRM_Activities[BranchEmployeeNumber]` $\rightarrow$ `DIM_EMPLOYEE[EMPLOYEE_ID]`
+    *   *Benefit:* Dragging `Region`, `Area`, or `Full Name` from `DIM_EMPLOYEE` automatically filters and calculates results for *both* Cases and Activities instantly.
 
-### 3. Object Inclusion
-The following tables and all their child objects (Columns, Measures, Hierarchies) were added to the new Perspective:
-*   `Cases_History_tbl` (Fact)
-*   `CRM_Activities` (Fact)
-*   `DIM_EMPLOYEE` (Dimension - providing Staff details, Location, and Hierarchy)
-*   `DIM_DATE` (Dimension - providing Date context)
+*   **Date Context (Joined by Date):**
+    *   `Cases_History_tbl[Date_key]` $\rightarrow$ `DIM_DATE[DATE_KEY]`
+    *   `CRM_Activities[Date_key]` $\rightarrow$ `DIM_DATE[DATE_KEY]`
+    *   *Benefit:* Enables time-series analysis (e.g., "Last Month") across both datasets simultaneously.
 
-## Outcome
-1.  **Model Optimization:** By relying on relationships rather than flattening the data (joining in SQL), we saved significant storage space and processing time. Columnar storage databases (like SSAS Tabular) perform best with narrow fact tables and relationships to dimensions.
-2.  **Report Usability:** Users connecting to the "Relationship Centre Banker Support Tracker" perspective will see only the relevant tables.
-3.  **Analytical Capability:** Users can now drag fields like `Region`, `Area`, or `Position` from `DIM_EMPLOYEE` and analyze `Case Count` or `Activity Count` from the Fact tables seamlessly.
-4.  **Automation:** The provided C# script automates this configuration in Tabular Editor, ensuring consistency and repeatability.
+## Verification
+When you connect to this Perspective in Power BI:
+1.  Select fields from **DIM_EMPLOYEE** (e.g., Region, Branch).
+2.  Select the **Measures** `[Banker Support Cases]` and `[Banker Support Activities]`.
+3.  The report will automatically display the combined counts for that Region, maintaining the original report's behavior but with improved performance.

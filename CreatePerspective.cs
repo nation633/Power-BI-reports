@@ -74,22 +74,36 @@ Action<Table, string, Table, string> EnsureRelationship = (fromTable, fromColNam
 // 5. Create Relationships
 
 // A. Employee Dimension (Banker Location/Details)
-//    Filters both Cases and Activities by Banker
 EnsureRelationship(casesTable, "BranchCallerEmployeeNumber", employeeTable, employeeIdColumn);
 EnsureRelationship(activitiesTable, "BranchEmployeeNumber", employeeTable, employeeIdColumn);
 
 // B. Date Dimension (Time Intelligence)
-//    Filters both Cases and Activities by Date
 EnsureRelationship(casesTable, "Date_key", dateTable, "DATE_KEY");
 EnsureRelationship(activitiesTable, "Date_key", dateTable, "DATE_KEY");
 
 // C. Cases as a Dimension for Activities
-//    Allows filtering Activities by Case Attributes (e.g. Portfolio, Product)
-//    Note: This assumes Cases_History_tbl has unique CaseNumber
 EnsureRelationship(activitiesTable, "CaseNumber", casesTable, "CaseNumber");
 
 
-// 6. Add Objects to Perspective
+// 6. Create Missing Columns for Filters (Slicers)
+
+// "Calling Party" on Cases: 'Branch' if BranchCallerEmployeeNumber exists, else 'Client'
+if (!casesTable.Columns.Any(c => c.Name.Equals("Calling Party", StringComparison.InvariantCultureIgnoreCase)))
+{
+    var col = casesTable.AddCalculatedColumn("Calling Party");
+    col.Expression = "IF(ISBLANK('" + casesTable.Name + "'[BranchCallerEmployeeNumber]), \"Client\", \"Branch\")";
+    Output("Created Calculated Column: 'Calling Party' in " + casesTable.Name);
+}
+
+// "Calling Party" on Activities: Same logic
+if (!activitiesTable.Columns.Any(c => c.Name.Equals("Calling Party", StringComparison.InvariantCultureIgnoreCase)))
+{
+    var col = activitiesTable.AddCalculatedColumn("Calling Party");
+    col.Expression = "IF(ISBLANK('" + activitiesTable.Name + "'[BranchEmployeeNumber]), \"Client\", \"Branch\")";
+    Output("Created Calculated Column: 'Calling Party' in " + activitiesTable.Name);
+}
+
+// 7. Add Objects to Perspective
 var tablesToInclude = new[] { casesTable, activitiesTable, employeeTable, dateTable };
 
 foreach (var table in tablesToInclude)
@@ -100,4 +114,4 @@ foreach (var table in tablesToInclude)
     foreach (var hier in table.Hierarchies) hier.InPerspective[perspective] = true;
 }
 
-Output("Script Complete. Perspective '" + perspectiveName + "' updated with cross-filtering relationships.");
+Output("Script Complete. Perspective updated with Columns for Slicers.");

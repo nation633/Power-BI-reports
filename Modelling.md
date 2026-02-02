@@ -15,13 +15,20 @@ The solution creates a dedicated Perspective and implements a **Star Schema** de
     *   `DIM_EMPLOYEE` (Dimension)
     *   `DIM_DATE` (Dimension)
 
-### 2. Relationship Strategy (The "Combined View")
+### 2. Logic Integration (Calculated Columns)
+To support the specific slicers requested (specifically **Calling Party**), we integrated the logic from the SQL query directly into the model as Calculated Columns.
+
+*   **[Calling Party]**: Added to both `Cases_History_tbl` and `CRM_Activities`.
+    *   *Logic:* `IF(ISBLANK([BranchCallerEmployeeNumber]), "Client", "Branch")`
+    *   *Purpose:* Replicates the SQL `CASE` statement to allow filtering by whether the call originated from a Branch or a Client.
+
+### 3. Relationship Strategy (The "Combined View")
 To allow you to see Cases and Activities side-by-side (e.g., "Show me Cases and Activities for Region X"), we established active relationships to shared dimensions. This provides the functionality of a "Join" but is much faster and cleaner.
 
 *   **Employee Context (Joined by Staff Number):**
     *   `Cases_History_tbl[BranchCallerEmployeeNumber]` $\rightarrow$ `DIM_EMPLOYEE[EMPLOYEE_ID]`
     *   `CRM_Activities[BranchEmployeeNumber]` $\rightarrow$ `DIM_EMPLOYEE[EMPLOYEE_ID]`
-    *   *Result:* The **Matching Columns** from your SQL (Area, Region, Title, Position) are now available in `DIM_EMPLOYEE`. Dragging any of these columns into a report will filter **both** Cases and Activities tables instantly.
+    *   *Result:* The matching columns from your report requirements (Region, Area, Position, Team Leader, Manager) are available in `DIM_EMPLOYEE`. Filtering by these columns filters **both** Cases and Activities tables instantly.
 
 *   **Date Context (Joined by Date):**
     *   `Cases_History_tbl[Date_key]` $\rightarrow$ `DIM_DATE[DATE_KEY]`
@@ -34,7 +41,6 @@ To allow you to see Cases and Activities side-by-side (e.g., "Show me Cases and 
 
 ## Verification
 When you connect to this Perspective in Power BI:
-1.  Select **Region** or **Area** from **DIM_EMPLOYEE**.
-2.  Select **Portfolio** from **Cases_History_tbl**.
-3.  Select measures or counts from the Fact tables.
-4.  The report will automatically display the combined counts, sliced by both Employee location and Case portfolio, maintaining the exact behavior of your SQL query joins.
+1.  **Slicers:** Drag fields like **Calling Party**, **Region**, or **Position** to the canvas.
+2.  **Values:** Drag counts from `Cases_History_tbl` and `CRM_Activities`.
+3.  **Result:** The slicers will filter both values correctly, replicating the joined report behavior.

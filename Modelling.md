@@ -10,7 +10,7 @@ The solution creates a dedicated Perspective and implements a **Star Schema** de
 ### 1. Perspective
 *   **Name:** `Relationship Centre Banker Support Tracker`
 *   **Content:** Contains only the relevant tables to replicate the original report's scope:
-    *   `Cases_History_tbl` (Fact)
+    *   `Cases_History_tbl` (Fact / Dimension)
     *   `CRM_Activities` (Fact)
     *   `DIM_EMPLOYEE` (Dimension)
     *   `DIM_DATE` (Dimension)
@@ -29,15 +29,20 @@ To allow you to see Cases and Activities side-by-side (e.g., "Show me Cases and 
 *   **Employee Context (Joined by Staff Number):**
     *   `Cases_History_tbl[BranchCallerEmployeeNumber]` $\rightarrow$ `DIM_EMPLOYEE[EMPLOYEE_ID]`
     *   `CRM_Activities[BranchEmployeeNumber]` $\rightarrow$ `DIM_EMPLOYEE[EMPLOYEE_ID]`
-    *   *Benefit:* Dragging `Region`, `Area`, or `Full Name` from `DIM_EMPLOYEE` automatically filters and calculates results for *both* Cases and Activities instantly.
+    *   *Result:* The **Matching Columns** from your SQL (Area, Region, Title, Position) are now available in `DIM_EMPLOYEE`. Dragging any of these columns into a report will filter **both** Cases and Activities tables instantly.
 
 *   **Date Context (Joined by Date):**
     *   `Cases_History_tbl[Date_key]` $\rightarrow$ `DIM_DATE[DATE_KEY]`
     *   `CRM_Activities[Date_key]` $\rightarrow$ `DIM_DATE[DATE_KEY]`
-    *   *Benefit:* Enables time-series analysis (e.g., "Last Month") across both datasets simultaneously.
+    *   *Result:* Enables time-series analysis (e.g., "Last Month") across both datasets simultaneously.
+
+*   **Case Context (Joined by Case Number):**
+    *   `CRM_Activities[CaseNumber]` $\rightarrow$ `Cases_History_tbl[CaseNumber]`
+    *   *Result:* Allows you to slice Activities by Case attributes (e.g., Portfolio, Product) just like in the SQL joins. `Cases` effectively acts as a lookup table for `Activities`.
 
 ## Verification
 When you connect to this Perspective in Power BI:
-1.  Select fields from **DIM_EMPLOYEE** (e.g., Region, Branch).
-2.  Select the **Measures** `[Banker Support Cases]` and `[Banker Support Activities]`.
-3.  The report will automatically display the combined counts for that Region, maintaining the original report's behavior but with improved performance.
+1.  Select **Region** or **Area** from **DIM_EMPLOYEE**.
+2.  Select **Portfolio** from **Cases_History_tbl**.
+3.  Select the **Measures** `[Banker Support Cases]` and `[Banker Support Activities]`.
+4.  The report will automatically display the combined counts, sliced by both Employee location and Case portfolio, maintaining the exact behavior of your SQL query joins.

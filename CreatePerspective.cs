@@ -2,12 +2,10 @@ using System.Linq;
 
 // 1. Configuration
 var perspectiveName = "Relationship Centre Banker Support Tracker";
-var employeeTableTargetName = "DIM_EMPLOYEE"; // The Dimension to link to
-var employeeIdColumn = "EMPLOYEE_ID"; // The key in DIM_EMPLOYEE
+var employeeTableTargetName = "DIM_EMPLOYEE";
+var employeeIdColumn = "EMPLOYEE_ID";
 
 // 2. Find Tables (Robust Matching)
-// We look for tables that *contain* the expected names to handle minor variations,
-// but prioritize exact matches if available.
 var casesTable = Model.Tables.FirstOrDefault(t => t.Name.Equals("Cases_History_tbl", StringComparison.InvariantCultureIgnoreCase))
                  ?? Model.Tables.FirstOrDefault(t => t.Name.Contains("Cases") && t.Name.Contains("History"));
 
@@ -42,7 +40,6 @@ if (!Model.Perspectives.Any(p => p.Name == perspectiveName))
 var perspective = Model.Perspectives[perspectiveName];
 
 // 4. Helper Delegate for Relationships
-// Defined as Action to avoid "local function" compilation errors in some TE environments
 Action<Table, string, Table, string> EnsureRelationship = (fromTable, fromColName, toTable, toColName) =>
 {
     var fromCol = fromTable.Columns.FirstOrDefault(c => c.Name.Equals(fromColName, StringComparison.InvariantCultureIgnoreCase));
@@ -74,36 +71,37 @@ Action<Table, string, Table, string> EnsureRelationship = (fromTable, fromColNam
     }
 };
 
-// 5. Create Relationships (Joining the Facts to Common Dimensions)
-// Cases -> Employee
-EnsureRelationship(casesTable, "BranchCallerEmployeeNumber", employeeTable, employeeIdColumn);
-// Cases -> Date
-EnsureRelationship(casesTable, "Date_key", dateTable, "DATE_KEY");
+// 5. Create Relationships
 
-// Activities -> Employee
+// A. Employee Dimension (Banker Location/Details)
+//    Filters both Cases and Activities by Banker
+EnsureRelationship(casesTable, "BranchCallerEmployeeNumber", employeeTable, employeeIdColumn);
 EnsureRelationship(activitiesTable, "BranchEmployeeNumber", employeeTable, employeeIdColumn);
-// Activities -> Date
+
+// B. Date Dimension (Time Intelligence)
+//    Filters both Cases and Activities by Date
+EnsureRelationship(casesTable, "Date_key", dateTable, "DATE_KEY");
 EnsureRelationship(activitiesTable, "Date_key", dateTable, "DATE_KEY");
+
+// C. Cases as a Dimension for Activities
+//    Allows filtering Activities by Case Attributes (e.g. Portfolio, Product)
+//    Note: This assumes Cases_History_tbl has unique CaseNumber
+EnsureRelationship(activitiesTable, "CaseNumber", casesTable, "CaseNumber");
 
 
 // 6. Create Integration Measures
-// These measures replicate the SQL logic (filtering) inside the model
-// so users can just drag-and-drop without writing complex DAX or SQL.
-
-// Measure: Banker Support Cases (Filtered for 'Service Request')
 if (!casesTable.Measures.Any(m => m.Name == "Banker Support Cases"))
 {
     var m = casesTable.AddMeasure("Banker Support Cases");
     m.Expression = "CALCULATE(COUNTROWS('" + casesTable.Name + "'), '" + casesTable.Name + "'[CaseType] = \"Service Request\")";
     m.FormatString = "#,0";
-    m.Description = "Count of cases where CaseType is 'Service Request', replicating the banker support report logic.";
+    m.Description = "Count of cases where CaseType is 'Service Request'.";
 }
 
-// Measure: Banker Support Activities
 if (!activitiesTable.Measures.Any(m => m.Name == "Banker Support Activities"))
 {
     var m = activitiesTable.AddMeasure("Banker Support Activities");
-    m.Expression = "COUNTROWS('" + activitiesTable.Name + "')"; // Add filters here if SQL had specific activity types
+    m.Expression = "COUNTROWS('" + activitiesTable.Name + "')";
     m.FormatString = "#,0";
 }
 
@@ -118,4 +116,4 @@ foreach (var table in tablesToInclude)
     foreach (var hier in table.Hierarchies) hier.InPerspective[perspective] = true;
 }
 
-Output("Script Complete. Perspective '" + perspectiveName + "' updated.");
+Output("Script Complete. Perspective '" + perspectiveName + "' updated with cross-filtering relationships.");

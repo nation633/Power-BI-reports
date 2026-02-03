@@ -248,13 +248,23 @@
     },
 
     "barChart": { "*": { "categoryAxis": [ { "gridlines": false } ], "valueAxis": [ { "gridlines": false } ] } },
-    "columnChart": { "*": { "categoryAxis": [ { "gridlines": false } ], "valueAxis": [ { "gridlines": false } ] } },
+    "columnChart": {
+      "*": {
+        "dataColors": [ "#006633" ],
+        "categoryAxis": [ { "gridlines": false } ],
+        "valueAxis": [ { "gridlines": false } ]
+      }
+    },
     "lineChart": { "*": { "categoryAxis": [ { "gridlines": false } ], "valueAxis": [ { "gridlines": false } ] } },
     "areaChart": { "*": { "categoryAxis": [ { "gridlines": false } ], "valueAxis": [ { "gridlines": false } ] } },
     "comboChart": { "*": { "categoryAxis": [ { "gridlines": false } ], "valueAxis": [ { "gridlines": false } ] } },
     "scatterChart": { "*": { "categoryAxis": [ { "gridlines": false } ], "valueAxis": [ { "gridlines": false } ] } },
     "lineStackedColumnComboChart": { "*": {} },
-    "lineClusteredColumnComboChart": { "*": {} },
+    "lineClusteredColumnComboChart": {
+      "*": {
+        "dataColors": [ "#CEDC00", "#006342", "#115740", "#78BE20", "#F2A900", "#FA4616" ]
+      }
+    },
     "stackedAreaChart": { "*": {} }
   }
 }

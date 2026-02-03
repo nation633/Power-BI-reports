@@ -14,6 +14,7 @@ The solution creates a dedicated Perspective and implements a **Star Schema** de
     *   `CRM_Activities` (Fact)
     *   `DIM_EMPLOYEE` (Dimension)
     *   `DIM_DATE` (Dimension)
+    *   `Contact_Type(RCSBS)` (Static Dimension)
 
 ### 2. Logic Integration (Calculated Columns)
 To support the specific slicers requested (specifically **Calling Party**), we integrated the logic from the SQL query directly into the model as Calculated Columns.
@@ -40,6 +41,10 @@ To allow you to see Cases and Activities side-by-side (e.g., "Show me Cases and 
     *   **Solution:** We created a specific measure: **[Banker Support Activities]**.
     *   **Logic:** `CALCULATE(COUNTROWS('CRM_Activities'), TREATAS(VALUES('Cases_History_tbl'[CaseNumber]), 'CRM_Activities'[CaseNumber]))`
     *   **Usage:** When you slice by Case attributes (like **Portfolio** or **Product**), use this measure to see the correct count of related Activities. The measure "virtually" applies the Case filter to the Activities table at query time.
+
+### 4. Static Tables
+*   **Contact_Type(RCSBS):** A calculated table added to support specific disconnected slicer requirements or measures.
+    *   *Content:* Contains "Email" and "Phone Call" with sort orders.
 
 ## Verification
 When you connect to this Perspective in Power BI:

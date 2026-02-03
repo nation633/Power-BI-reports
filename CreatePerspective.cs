@@ -117,16 +117,41 @@ meas.Expression = "CALCULATE(COUNTROWS('" + activitiesTable.Name + "'), TREATAS(
 meas.FormatString = "#,0";
 Output("Created Virtual Relationship Measure: " + measureName);
 
+// 8. Create Calculated Table "Contact_Type(RCSBS)"
+var contactTableName = "Contact_Type(RCSBS)";
+var contactTable = Model.Tables.FirstOrDefault(t => t.Name.Equals(contactTableName, StringComparison.InvariantCultureIgnoreCase));
 
-// 8. Add Objects to Perspective
-var tablesToInclude = new[] { casesTable, activitiesTable, employeeTable, dateTable };
+if (contactTable == null)
+{
+    contactTable = Model.AddCalculatedTable(contactTableName);
+    // Use the DATATABLE DAX expression provided by the user
+    contactTable.Partitions[0].Expression = @"DATATABLE (
+    ""Selection"", STRING,
+    ""Sort Order"", INTEGER,
+    {
+        { ""Email"", 1 },
+        { ""Phone Call"", 2 }
+    }
+)";
+    Output("Created Calculated Table: " + contactTableName);
+}
+else
+{
+    Output("Table already exists: " + contactTableName);
+}
+
+
+// 9. Add Objects to Perspective
+var tablesToInclude = new[] { casesTable, activitiesTable, employeeTable, dateTable, contactTable };
 
 foreach (var table in tablesToInclude)
 {
+    if (table == null) continue; // Safety check
+
     table.InPerspective[perspective] = true;
     foreach (var col in table.Columns) col.InPerspective[perspective] = true;
     foreach (var m in table.Measures) m.InPerspective[perspective] = true;
     foreach (var hier in table.Hierarchies) hier.InPerspective[perspective] = true;
 }
 
-Output("Script Complete. Perspective updated with Virtual Relationship Measure.");
+Output("Script Complete. Perspective updated with Virtual Relationship Measure and Contact_Type(RCSBS) table.");

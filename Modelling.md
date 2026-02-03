@@ -23,7 +23,7 @@ To support the specific slicers requested (specifically **Calling Party**), we i
     *   *Purpose:* Replicates the SQL `CASE` statement to allow filtering by whether the call originated from a Branch or a Client.
 
 ### 3. Relationship Strategy (The "Combined View")
-To allow you to see Cases and Activities side-by-side (e.g., "Show me Cases and Activities for Region X"), we established active relationships to shared dimensions. This provides the functionality of a "Join" but is much faster and cleaner.
+To allow you to see Cases and Activities side-by-side (e.g., "Show me Cases and Activities for Region X"), we established active relationships to shared dimensions.
 
 *   **Employee Context (Joined by Staff Number):**
     *   `Cases_History_tbl[BranchCallerEmployeeNumber]` $\rightarrow$ `DIM_EMPLOYEE[EMPLOYEE_ID]`
@@ -35,12 +35,16 @@ To allow you to see Cases and Activities side-by-side (e.g., "Show me Cases and 
     *   `CRM_Activities[Date_key]` $\rightarrow$ `DIM_DATE[DATE_KEY]`
     *   *Result:* Enables time-series analysis (e.g., "Last Month") across both datasets simultaneously.
 
-*   **Case Context (Joined by Case Number):**
-    *   `CRM_Activities[CaseNumber]` $\rightarrow$ `Cases_History_tbl[CaseNumber]`
-    *   *Result:* Allows you to slice Activities by Case attributes (e.g., Portfolio, Product) just like in the SQL joins. `Cases` effectively acts as a lookup table for `Activities`.
+*   **Case Context (Virtual Relationship via DAX):**
+    *   **Challenge:** A physical relationship cannot be created between `CRM_Activities` and `Cases_History_tbl` because the Cases table contains historical data (duplicate `CaseNumber`s), preventing it from acting as a unique Dimension.
+    *   **Solution:** We created a specific measure: **[Banker Support Activities]**.
+    *   **Logic:** `CALCULATE(COUNTROWS('CRM_Activities'), TREATAS(VALUES('Cases_History_tbl'[CaseNumber]), 'CRM_Activities'[CaseNumber]))`
+    *   **Usage:** When you slice by Case attributes (like **Portfolio** or **Product**), use this measure to see the correct count of related Activities. The measure "virtually" applies the Case filter to the Activities table at query time.
 
 ## Verification
 When you connect to this Perspective in Power BI:
 1.  **Slicers:** Drag fields like **Calling Party**, **Region**, or **Position** to the canvas.
-2.  **Values:** Drag counts from `Cases_History_tbl` and `CRM_Activities`.
+2.  **Values:**
+    *   For Case Counts: Use standard Case counts.
+    *   For Activity Counts: Use the **[Banker Support Activities]** measure if slicing by Case fields (Portfolio/Product). If slicing only by Date/Employee, standard Activity counts will also work.
 3.  **Result:** The slicers will filter both values correctly, replicating the joined report behavior.

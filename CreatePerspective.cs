@@ -81,9 +81,9 @@ EnsureRelationship(activitiesTable, "BranchEmployeeNumber", employeeTable, emplo
 EnsureRelationship(casesTable, "Date_key", dateTable, "DATE_KEY");
 EnsureRelationship(activitiesTable, "Date_key", dateTable, "DATE_KEY");
 
-// C. Cases as a Dimension for Activities
-EnsureRelationship(activitiesTable, "CaseNumber", casesTable, "CaseNumber");
-
+// Note: A direct relationship between Activities and Cases cannot be created because Cases_History_tbl
+// contains duplicate CaseNumbers (it is a transactional history table, not a unique dimension).
+// Instead, we use a DAX measure with TREATAS to handle the filtering virtually.
 
 // 6. Create Missing Columns for Filters (Slicers)
 
@@ -103,15 +103,30 @@ if (!activitiesTable.Columns.Any(c => c.Name.Equals("Calling Party", StringCompa
     Output("Created Calculated Column: 'Calling Party' in " + activitiesTable.Name);
 }
 
-// 7. Add Objects to Perspective
+// 7. Create Virtual Relationship Measure (Workaround for Duplicates)
+var measureName = "Banker Support Activities";
+// Remove old version if it exists to ensure expression is updated
+var oldMeas = activitiesTable.Measures.FirstOrDefault(m => m.Name.Equals(measureName, StringComparison.InvariantCultureIgnoreCase));
+if (oldMeas != null)
+{
+    oldMeas.Delete();
+}
+
+var meas = activitiesTable.AddMeasure(measureName);
+meas.Expression = "CALCULATE(COUNTROWS('" + activitiesTable.Name + "'), TREATAS(VALUES('" + casesTable.Name + "'[CaseNumber]), '" + activitiesTable.Name + "'[CaseNumber]))";
+meas.FormatString = "#,0";
+Output("Created Virtual Relationship Measure: " + measureName);
+
+
+// 8. Add Objects to Perspective
 var tablesToInclude = new[] { casesTable, activitiesTable, employeeTable, dateTable };
 
 foreach (var table in tablesToInclude)
 {
     table.InPerspective[perspective] = true;
     foreach (var col in table.Columns) col.InPerspective[perspective] = true;
-    foreach (var meas in table.Measures) meas.InPerspective[perspective] = true;
+    foreach (var m in table.Measures) m.InPerspective[perspective] = true;
     foreach (var hier in table.Hierarchies) hier.InPerspective[perspective] = true;
 }
 
-Output("Script Complete. Perspective updated with Columns for Slicers.");
+Output("Script Complete. Perspective updated with Virtual Relationship Measure.");

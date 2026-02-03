@@ -12,6 +12,7 @@ To ensure all visuals adhere to the corporate identity and standard formatting, 
 4.  Select **Browse for themes**.
 5.  Locate and select the `NEDBANK_4.1_Template.json` file from this repository.
 6.  Once imported, the report canvas background, default colors, and visual styles will update automatically.
+    *   **Note:** This theme is designed to aggressively override existing styles. If you have a report with manual formatting, applying this theme should reset most elements (charts, matrices, etc.) to the standard design. If some elements persist, you may need to select the visual and choose "Reset to default" in the format pane, though the theme handles most cases.
 
 ## 2. Visual specific configurations
 

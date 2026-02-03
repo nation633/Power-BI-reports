@@ -61,7 +61,9 @@
         "visualTooltip": [ { "type": "Default" } ],
         "stylePreset": [ { "name": "None" } ],
         "dataLabels": [ { "color": { "solid": { "color": "#404040" } } } ],
-        "wordWrap": [ { "show": true } ]
+        "wordWrap": [ { "show": true } ],
+        "grid": [ { "gridVertical": false, "gridHorizontal": false } ],
+        "plotArea": [ { "transparency": 0, "background": { "solid": { "color": "#FFFFFF" } } } ]
       }
     },
 

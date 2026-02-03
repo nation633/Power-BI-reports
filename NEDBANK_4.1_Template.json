@@ -139,13 +139,44 @@
 
     "matrix": {
       "*": {
+        "stylePreset": [ { "name": "None" } ],
         "grid": [ { "rowPadding": 6, "gridVertical": false, "gridHorizontal": false } ],
         "columnHeaders": [
           { "fontFamily": "Calibri", "fontSize": 12, "textAlign": "center",
             "fontColor": { "solid": { "color": "#FFFFFF" } }, "backColor": { "solid": { "color": "#006341" } } }
         ],
-        "rowHeaders": [ { "fontFamily": "Calibri", "fontSize": 10, "textAlign": "center" } ],
-        "values": [ { "fontFamily": "Calibri", "fontSize": 10, "textAlign": "center" } ],
+        "rowHeaders": [ { "fontFamily": "Calibri", "fontSize": 10, "textAlign": "center", "stepped": false } ],
+        "values": [
+          { "fontFamily": "Calibri", "fontSize": 10, "textAlign": "center",
+            "color": { "solid": { "color": "#000000" } },
+            "backColor": { "solid": { "color": "#FFFFFF" } },
+            "secColor": { "solid": { "color": "#000000" } },
+            "secBackColor": { "solid": { "color": "#FFFFFF" } },
+            "wordWrap": true }
+        ],
+        "border": [ { "show": true, "color": { "solid": { "color": "#006341" } }, "radius": 0 } ],
+        "dropShadow": [ { "show": false } ],
+        "padding": [ { "top": 0, "right": 0, "bottom": 1, "left": 0 } ]
+      }
+    },
+
+    "pivotTable": {
+      "*": {
+        "stylePreset": [ { "name": "None" } ],
+        "grid": [ { "rowPadding": 6, "gridVertical": false, "gridHorizontal": false } ],
+        "columnHeaders": [
+          { "fontFamily": "Calibri", "fontSize": 12, "textAlign": "center",
+            "fontColor": { "solid": { "color": "#FFFFFF" } }, "backColor": { "solid": { "color": "#006341" } } }
+        ],
+        "rowHeaders": [ { "fontFamily": "Calibri", "fontSize": 10, "textAlign": "center", "stepped": false } ],
+        "values": [
+          { "fontFamily": "Calibri", "fontSize": 10, "textAlign": "center",
+            "color": { "solid": { "color": "#000000" } },
+            "backColor": { "solid": { "color": "#FFFFFF" } },
+            "secColor": { "solid": { "color": "#000000" } },
+            "secBackColor": { "solid": { "color": "#FFFFFF" } },
+            "wordWrap": true }
+        ],
         "border": [ { "show": true, "color": { "solid": { "color": "#006341" } }, "radius": 0 } ],
         "dropShadow": [ { "show": false } ],
         "padding": [ { "top": 0, "right": 0, "bottom": 1, "left": 0 } ]
